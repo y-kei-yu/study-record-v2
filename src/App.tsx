@@ -1,9 +1,11 @@
-import { Box, Button, Center, FormControl, FormLabel, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure } from "@chakra-ui/react";
+import { Box, Button, Center, FormControl, FormLabel, IconButton, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { DeleteRecord, GetAllRecords, InsertRecord } from "./lib/studyRecord";
 import { Record } from "./domain/record";
 import React from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { FaRegEdit } from "react-icons/fa";
+import { MdDelete } from "react-icons/md";
 
 
 
@@ -79,7 +81,21 @@ function App() {
                   <Td>{record.title}</Td>
                   <Td>{record.time}</Td>
                   <Td>
-                    <Button colorScheme="red" onClick={() => { deleteRecord(record.id) }}>削除</Button>
+                    <IconButton
+                      aria-label="編集"
+                      icon={<FaRegEdit />}
+                      variant="ghost"
+                      color="teal.500"
+                    />
+                  </Td>
+                  <Td>
+                    <IconButton
+                      aria-label="削除"
+                      icon={<MdDelete />}
+                      variant="ghost"
+                      color="teal.500"
+                      onClick={() => { deleteRecord(record.id) }}
+                    />
                   </Td>
                 </Tr>
               ))}
@@ -128,7 +144,7 @@ function App() {
             </ModalBody>
 
             <ModalFooter>
-              <Button type="submit" colorScheme='blue' mr={3}>
+              <Button type="submit" colorScheme='teal' mr={3}>
                 登録
               </Button>
             </ModalFooter>
