@@ -20,6 +20,7 @@
     "framer-motion": "^12.9.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.56.3",
     "vite-plugin-env-compatible": "^2.0.1"
   },
   "devDependencies": {

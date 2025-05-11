@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { GetAllRecords, InsertRecord } from "./lib/studyRecord";
 import { Record } from "./domain/record";
 import React from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+
 
 
 
@@ -10,11 +12,19 @@ import React from "react";
 function App() {
   const [records, setRecords] = useState<Record[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [title, setTitle] = useState<string>("");
-  const [time, setTime] = useState<number>(0);
 
-  const onChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
-  const onChangeTime = (e: React.ChangeEvent<HTMLInputElement>) => setTime(Number(e.target.value))
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<Record>();
+
+  const onSubmit: SubmitHandler<Record> = async (data) => {
+    console.log(data)
+    await InsertRecord(data.title, data.time)
+
+    getAllRecords();
+
+    reset({ title: '' })
+    reset({ time: '' })
+    onClose()
+  }
 
 
   //全データ取得
@@ -29,21 +39,10 @@ function App() {
     getAllRecords()
   }, [])
 
-  //新規登録
-  const onClickAdd = async () => {
-    await InsertRecord(title, time);
 
-    getAllRecords();
-
-    //初期化
-    setTitle("");
-    setTime(0);
-  }
 
   const { isOpen, onOpen, onClose } = useDisclosure()
 
-  const initialRef = React.useRef(null)
-  const finalRef = React.useRef(null)
 
   if (isLoading) {
     return <p>Loading...</p>
@@ -78,34 +77,53 @@ function App() {
       </Box>
 
       <Modal
-        initialFocusRef={initialRef}
-        finalFocusRef={finalRef}
         isOpen={isOpen}
         onClose={onClose}
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Create your account</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <FormControl>
-              <FormLabel>学習内容</FormLabel>
-              <Input ref={initialRef} placeholder='First name' onChange={onChangeTitle} />
-            </FormControl>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <ModalHeader>Create your account</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              <FormControl>
+                <FormLabel>学習内容</FormLabel>
+                <Input
+                  type="text"
+                  placeholder="学習内容を記入してください"
+                  {...register("title", { required: true })} />
+                {errors.title && <span style={{ color: "red" }}>学習内容の入力は必須です</span>}
+              </FormControl>
 
-            <FormControl mt={4}>
-              <FormLabel>学習時間</FormLabel>
-              <Input placeholder='0' onChange={onChangeTime} />
-            </FormControl>
-          </ModalBody>
+              <FormControl mt={4}>
+                <FormLabel>学習時間</FormLabel>
+                <Input
+                  type="number"
+                  placeholder='学習時間を記入してください'
+                  {...register(
+                    "time", {
+                    required: "学習時間の入力は必須です",
+                    valueAsNumber: true,
+                    min: {
+                      value: 1, message: "学習時間は0以上である必要があります"
+                    }
+                  })}
+                />
+                {errors.time && (
+                  <span style={{ color: "red" }}>{errors.time.message}</span>
+                )}
+              </FormControl>
+            </ModalBody>
 
-          <ModalFooter>
-            <Button onClick={() => { onClose(); onClickAdd(); }} colorScheme='blue' mr={3}>
-              登録
-            </Button>
-          </ModalFooter>
+            <ModalFooter>
+              <Button type="submit" colorScheme='blue' mr={3}>
+                登録
+              </Button>
+            </ModalFooter>
+          </form >
         </ModalContent>
       </Modal>
+
     </>
   );
 }
