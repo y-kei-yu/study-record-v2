@@ -21,8 +21,7 @@ function App() {
 
     getAllRecords();
 
-    reset({ title: '' })
-    reset({ time: '' })
+    reset()
     onClose()
   }
 
