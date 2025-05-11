@@ -27,3 +27,15 @@ export async function InsertRecord(title: string, time: number) {
         throw new Error(response.error.message)
     }
 }
+
+//データ削除
+export async function DeleteRecord(id: string) {
+    const response = await supabase
+                        .from("study-record")
+                        .delete()
+                        .eq("id", id)
+                        .select()
+    if (response.error) {
+        throw new Error(response.error.message)
+    }
+}

@@ -1,6 +1,6 @@
 import { Box, Button, Center, FormControl, FormLabel, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { GetAllRecords, InsertRecord } from "./lib/studyRecord";
+import { DeleteRecord, GetAllRecords, InsertRecord } from "./lib/studyRecord";
 import { Record } from "./domain/record";
 import React from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -12,27 +12,36 @@ import { SubmitHandler, useForm } from "react-hook-form";
 function App() {
   const [records, setRecords] = useState<Record[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
-
   const { register, handleSubmit, formState: { errors }, reset } = useForm<Record>();
-
-  const onSubmit: SubmitHandler<Record> = async (data) => {
-    console.log(data)
-    await InsertRecord(data.title, data.time)
-
-    getAllRecords();
-
-    reset()
-    onClose()
-  }
-
 
   //全データ取得
   const getAllRecords = async () => {
     const allRecords = await GetAllRecords()
     setRecords(allRecords)
     setIsLoading(false)
-
   }
+
+  //データ登録
+  const onSubmit: SubmitHandler<Record> = async (data) => {
+    console.log(data)
+    await InsertRecord(data.title, data.time)
+
+    //登録後にデータを取得
+    getAllRecords();
+
+    //モーダルを初期化し閉じる
+    reset()
+    onClose()
+  }
+
+  //データ削除
+  const deleteRecord = async (id: string) => {
+    await DeleteRecord(id)
+    //削除後にデータを取得
+    getAllRecords()
+  }
+
+
   //一覧画面表示
   useEffect(() => {
     getAllRecords()
@@ -43,6 +52,7 @@ function App() {
   const { isOpen, onOpen, onClose } = useDisclosure()
 
 
+  //ローディング
   if (isLoading) {
     return <p>Loading...</p>
   }
@@ -68,6 +78,9 @@ function App() {
                 <Tr key={record.id}>
                   <Td>{record.title}</Td>
                   <Td>{record.time}</Td>
+                  <Td>
+                    <Button colorScheme="red" onClick={() => { deleteRecord(record.id) }}>削除</Button>
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
