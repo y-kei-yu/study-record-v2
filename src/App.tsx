@@ -1,29 +1,44 @@
 import { Box, Button, Center, FormControl, FormLabel, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { GetAllRecords } from "./lib/studyRecord";
+import { GetAllRecords, InsertRecord } from "./lib/studyRecord";
 import { Record } from "./domain/record";
 import React from "react";
 
 
 
 
-
-
-
-
 function App() {
   const [records, setRecords] = useState<Record[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [title, setTitle] = useState<string>("");
+  const [time, setTime] = useState<number>(0);
 
+  const onChangeTitle = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
+  const onChangeTime = (e: React.ChangeEvent<HTMLInputElement>) => setTime(Number(e.target.value))
+
+
+  //全データ取得
+  const getAllRecords = async () => {
+    const allRecords = await GetAllRecords()
+    setRecords(allRecords)
+    setIsLoading(false)
+
+  }
+  //一覧画面表示
   useEffect(() => {
-    const getAllRecords = async () => {
-      const allRecords = await GetAllRecords()
-      setRecords(allRecords)
-      setIsLoading(false)
-    }
-
     getAllRecords()
   }, [])
+
+  //新規登録
+  const onClickAdd = async () => {
+    await InsertRecord(title, time);
+
+    getAllRecords();
+
+    //初期化
+    setTitle("");
+    setTime(0);
+  }
 
   const { isOpen, onOpen, onClose } = useDisclosure()
 
@@ -62,11 +77,6 @@ function App() {
         </TableContainer>
       </Box>
 
-      <Button onClick={onOpen}>Open Modal</Button>
-      <Button ml={4} ref={finalRef}>
-        Ill receive focus on close
-      </Button>
-
       <Modal
         initialFocusRef={initialRef}
         finalFocusRef={finalRef}
@@ -79,21 +89,20 @@ function App() {
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl>
-              <FormLabel>First name</FormLabel>
-              <Input ref={initialRef} placeholder='First name' />
+              <FormLabel>学習内容</FormLabel>
+              <Input ref={initialRef} placeholder='First name' onChange={onChangeTitle} />
             </FormControl>
 
             <FormControl mt={4}>
-              <FormLabel>Last name</FormLabel>
-              <Input placeholder='Last name' />
+              <FormLabel>学習時間</FormLabel>
+              <Input placeholder='0' onChange={onChangeTime} />
             </FormControl>
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme='blue' mr={3}>
-              Save
+            <Button onClick={() => { onClose(); onClickAdd(); }} colorScheme='blue' mr={3}>
+              登録
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
