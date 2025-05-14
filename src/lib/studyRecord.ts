@@ -29,7 +29,7 @@ export async function InsertRecord(title: string, time: number) {
 }
 
 //データ削除
-export async function DeleteRecord(id: string) {
+export async function DeleteRecord(id: number) {
     const response = await supabase
                         .from("study-record")
                         .delete()

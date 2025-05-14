@@ -19,13 +19,14 @@ function App() {
   //全データ取得
   const getAllRecords = async () => {
     const allRecords = await GetAllRecords()
+    console.log(allRecords)
     setRecords(allRecords)
     setIsLoading(false)
   }
 
   //データ登録
   const onSubmit: SubmitHandler<Record> = async (data) => {
-    console.log(data)
+    //console.log(data)
     await InsertRecord(data.title, data.time)
 
     //登録後にデータを取得
@@ -37,7 +38,7 @@ function App() {
   }
 
   //データ削除
-  const deleteRecord = async (id: string) => {
+  const deleteRecord = async (id: number) => {
     await DeleteRecord(id)
     //削除後にデータを取得
     getAllRecords()
@@ -62,7 +63,7 @@ function App() {
     <>
       <Box w='30%' p={4} bg="teal.200" color={'white'} justifyContent={'center'} margin='auto' mt={4} borderRadius='md'>
         <Center bg='white' h='100px' color='black' fontSize={'30px'} borderRadius='lg'>
-          <h1>新・学習記録アプリ</h1>
+          <h1 data-testid="testTitle">新・学習記録アプリ</h1>
         </Center>
         <Box display="flex" justifyContent="flex-end" my={2}>
           <Button colorScheme='teal' onClick={onOpen}>新規登録</Button>
@@ -111,7 +112,7 @@ function App() {
         <ModalOverlay />
         <ModalContent>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <ModalHeader>Create your account</ModalHeader>
+            <ModalHeader fontSize={'30px'} data-testid="modalTitle">新規登録</ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
               <FormControl>
