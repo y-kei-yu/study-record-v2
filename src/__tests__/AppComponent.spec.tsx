@@ -10,10 +10,11 @@ const mockData = [
   new Record(4, "test4", 4, "2023-10-01T00:00:00Z"),
 ];
 
-const mockGetAllRecords = jest.fn()
-  .mockResolvedValue(mockData);
+const mockGetAllRecords = jest.fn().mockResolvedValue(mockData);
 
 const mockInsertRecord = jest.fn().mockResolvedValue(undefined);
+
+const mockDeleteRecord = jest.fn().mockResolvedValue(undefined);
 
 
 //モックの実装
@@ -21,6 +22,7 @@ jest.mock("../lib/studyRecord.ts", () => {
   return {
     GetAllRecords: () => mockGetAllRecords(),
     InsertRecord: (title: string, time: number) => mockInsertRecord(title, time),
+    DeleteRecord: (id: number) => mockDeleteRecord(id)
   }
 })
 
@@ -83,12 +85,11 @@ describe("mockAppTest", () => {
     const titleInput = await screen.findByPlaceholderText("学習内容を記入してください")
     fireEvent.change(titleInput, { target: { value: "React" } })
     const timeInput = await screen.findByPlaceholderText("学習時間を記入してください")
-    fireEvent.change(timeInput, { target: { value: 3 } })
+    fireEvent.change(timeInput, { target: { value: "3" } })
 
     //登録ボタンをクリック
     const registerButton = await screen.findByRole("button", { name: "登録" })
     fireEvent.click(registerButton)
-
 
     await waitFor(async () => {
       expect(mockInsertRecord).toHaveBeenCalledWith("React", 3);
@@ -107,4 +108,83 @@ describe("mockAppTest", () => {
     expect(modalTitle).toHaveTextContent("新規登録")
   })
 
+  it("学習内容が未入力のときに登録するとエラーがでること", async () => {
+    render(<App />);
+    //新規登録ボタンをクリック
+    fireEvent.click(await (screen.findByRole("button", { name: "新規登録" })))
+    //学習時間のみ入力
+    const timeInput = await screen.findByPlaceholderText("学習時間を記入してください")
+    fireEvent.change(timeInput, { target: { value: "3" } })
+    //登録ボタンをクリック
+    const registerButton = await screen.findByRole("button", { name: "登録" })
+    fireEvent.click(registerButton)
+    expect(timeInput).toHaveValue(3)
+    const errorMessage = await screen.findByTestId("titleErrorMessage");
+    expect(errorMessage).toHaveTextContent("学習内容の入力は必須です")
+
+  })
+
+  it("学習時間が未入力のときに登録するとエラーがでること", async () => {
+    render(<App />);
+    //新規登録ボタンをクリック
+    fireEvent.click(await (screen.findByRole("button", { name: "新規登録" })))
+    //学習内容のみ入力
+    const titleInput = await screen.findByPlaceholderText("学習内容を記入してください")
+    fireEvent.change(titleInput, { target: { value: "React2" } })
+    //登録ボタンをクリック
+    const registerButton = await screen.findByRole("button", { name: "登録" })
+    fireEvent.click(registerButton)
+    expect(titleInput).toHaveValue("React2")
+    const errorMessage = await screen.findByTestId("timeErrorMessage");
+    expect(errorMessage).toHaveTextContent("学習時間の入力は必須です")
+  })
+
+  it("学習時間が0以上でないときのエラーがでること", async () => {
+    render(<App />);
+    //新規登録ボタンをクリック
+    fireEvent.click(await (screen.findByRole("button", { name: "新規登録" })))
+    //学習内容を入力
+    const titleInput = await screen.findByPlaceholderText("学習内容を記入してください")
+    fireEvent.change(titleInput, { target: { value: "React3" } })
+    //学習時間を入力
+    const timeInput = await screen.findByPlaceholderText("学習時間を記入してください")
+    fireEvent.change(timeInput, { target: { value: "0" } })
+
+    //登録ボタンをクリック
+    const registerButton = await screen.findByRole("button", { name: "登録" })
+    fireEvent.click(registerButton)
+
+    expect(titleInput).toHaveValue("React3")
+    expect(timeInput).toHaveValue(0)
+    const errorMessage = await screen.findByTestId("timeErrorMessage");
+    expect(errorMessage).toHaveTextContent("学習時間は0以上である必要があります")
+  })
+
+  it("ユーザーは学習記録を削除することができること", async () => {
+    // データコピー
+    const currentData = [...mockData];
+
+    //指定されたIDの学習記録を、配列から削除する
+    mockDeleteRecord.mockImplementation((id: number) => {
+      const index = currentData.findIndex((record => record.id === id))
+      if (index !== -1) {
+        currentData.splice(index, 1);
+      }
+      // 次に GetAllRecords を呼んだときは新しいデータを返すように
+      mockGetAllRecords.mockResolvedValue([...currentData]);
+      return Promise.resolve();
+    });
+    render(<App />);
+    const deleteButtons = await screen.findAllByRole("button", { name: "削除" })
+    //test2のモックデータを削除
+    fireEvent.click(deleteButtons[1])
+    await waitFor(() => {
+      expect(screen.queryByText("test2")).toBeNull();
+    })
+
+    // mockDeleteRecordが正しく呼び出されたことを確認
+    expect(mockDeleteRecord).toHaveBeenCalledWith(2);
+
+
+  })
 })

@@ -121,7 +121,7 @@ function App() {
                   type="text"
                   placeholder="学習内容を記入してください"
                   {...register("title", { required: true })} />
-                {errors.title && <span style={{ color: "red" }}>学習内容の入力は必須です</span>}
+                {errors.title && <span style={{ color: "red" }} data-testid="titleErrorMessage">学習内容の入力は必須です</span>}
               </FormControl>
 
               <FormControl mt={4}>
@@ -137,9 +137,10 @@ function App() {
                       value: 1, message: "学習時間は0以上である必要があります"
                     }
                   })}
+                  data-testid="minErrorMessage"
                 />
                 {errors.time && (
-                  <span style={{ color: "red" }}>{errors.time.message}</span>
+                  <span style={{ color: "red" }} data-testid="timeErrorMessage">{errors.time.message}</span>
                 )}
               </FormControl>
             </ModalBody>
