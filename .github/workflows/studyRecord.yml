@@ -21,6 +21,9 @@ jobs:
 
             - name: Run build
               run: npm run build
+              env:
+                VITE_SUPABASE_URL: ${{secrets.SUPABASE_URL}}
+                VITE_SUPABASE_ANON_KEY: ${{secrets.SUPABASE_ANON_KEY}}
               
               ##ビルドでできた dist フォルダをデプロイで使えるように保存
             - name: Upload build-artifacts
