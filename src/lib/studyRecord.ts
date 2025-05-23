@@ -4,7 +4,11 @@ import { supabase } from "../utils/supabase";
 
 //データ取得
 export async function GetAllRecords(): Promise<Record[]> {
-    const response = await supabase.from("study-record").select("*")
+    const response = await supabase
+                        .from("study-record")
+                        .select("*")
+                        // 作成日時の新しい順にする
+                        .order("created_at", { ascending: true})
 
     if (response.error) {
         throw new Error(response.error.message)
@@ -23,6 +27,18 @@ export async function InsertRecord(title: string, time: number) {
                         .insert({title,time})
                         .select()
     
+    if (response.error) {
+        throw new Error(response.error.message)
+    }
+}
+
+//データ更新
+export async function UpdateRecord(id: number,title:string,time: number) {
+    const response = await supabase
+                        .from("study-record")
+                        .update({title,time})
+                        .eq("id", id)
+                        .select()
     if (response.error) {
         throw new Error(response.error.message)
     }

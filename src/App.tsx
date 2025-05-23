@@ -1,6 +1,6 @@
 import { Box, Button, Center, FormControl, FormLabel, IconButton, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { DeleteRecord, GetAllRecords, InsertRecord } from "./lib/studyRecord";
+import { DeleteRecord, GetAllRecords, InsertRecord, UpdateRecord } from "./lib/studyRecord";
 import { Record } from "./domain/record";
 import React from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -8,13 +8,54 @@ import { FaRegEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 
 
-
-
-
 function App() {
   const [records, setRecords] = useState<Record[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create")
+  const [currentRecord, setCurrentRecord] = useState<Record | null>(null);
+
+  const { isOpen, onOpen, onClose } = useDisclosure()
   const { register, handleSubmit, formState: { errors }, reset } = useForm<Record>();
+
+  //新規登録ボタンをクリック処理
+  const handleRegisterClick = () => {
+    reset({
+      title: "",
+      time: undefined
+    })
+    setCurrentRecord(null)
+    setModalMode("create")
+    onOpen()
+  }
+  //編集ボタンをクリック処理
+  const handleEditClick = (record: Record) => {
+    setModalMode("edit")
+    setCurrentRecord(record)
+    reset({
+      title: record.title,
+      time: record.time
+    })
+    onOpen()
+  }
+
+  //削除ボタンをクリック処理
+  const handleDeleteClick = async (id: number) => {
+    await DeleteRecord(id)
+    //削除後にデータを取得
+    getAllRecords()
+  }
+
+  //キャンセルボタンをクリック処理
+  const handleCancelClick = () => {
+    reset({
+      title: "",
+      time: undefined
+    })
+    setCurrentRecord(null)
+    onClose()
+  }
+
+
 
   //全データ取得
   const getAllRecords = async () => {
@@ -24,25 +65,28 @@ function App() {
     setIsLoading(false)
   }
 
-  //データ登録
+  //データ登録、更新処理
   const onSubmit: SubmitHandler<Record> = async (data) => {
-    //console.log(data)
-    await InsertRecord(data.title, data.time)
-
+    if (modalMode === "create") {
+      await InsertRecord(data.title, data.time)
+    } else if (modalMode === "edit") {
+      if (currentRecord) {
+        await UpdateRecord(currentRecord.id, data.title, data.time)
+      }
+    }
     //登録後にデータを取得
     getAllRecords();
 
+
     //モーダルを初期化し閉じる
-    reset()
+    reset({
+      title: "",
+      time: undefined
+    })
+    setCurrentRecord(null)
     onClose()
   }
 
-  //データ削除
-  const deleteRecord = async (id: number) => {
-    await DeleteRecord(id)
-    //削除後にデータを取得
-    getAllRecords()
-  }
 
 
   //一覧画面表示
@@ -52,7 +96,7 @@ function App() {
 
 
 
-  const { isOpen, onOpen, onClose } = useDisclosure()
+
 
 
   //ローディング
@@ -61,19 +105,22 @@ function App() {
   }
   return (
     <>
-      <Box w='30%' p={4} bg="teal.200" color={'white'} justifyContent={'center'} margin='auto' mt={4} borderRadius='md'>
-        <Center bg='white' h='100px' color='black' fontSize={'30px'} borderRadius='lg'>
+      <Box w="30%" p={4} bg="teal.200" color={"white"} justifyContent={"center"} margin="auto" mt={4} borderRadius="md">
+        <Center bg="white" h="100px" color="black" fontSize={"30px"} borderRadius="lg">
           <h1 data-testid="testTitle">新・学習記録アプリ</h1>
         </Center>
         <Box display="flex" justifyContent="flex-end" my={2}>
-          <Button colorScheme='teal' onClick={onOpen}>新規登録</Button>
+          <Button colorScheme="teal" onClick={(handleRegisterClick)}>新規登録</Button>
         </Box>
-        <TableContainer>
-          <Table variant='striped' colorScheme='teal' color='black'>
+        <TableContainer overflowX="auto">
+          <Table variant="striped" colorScheme="teal" color="black">
             <Thead>
               <Tr>
                 <Th>学習内容</Th>
                 <Th>学習時間(h)</Th>
+                <Th>編集</Th>
+                <Th>削除</Th>
+
               </Tr>
             </Thead>
             <Tbody>
@@ -87,6 +134,7 @@ function App() {
                       icon={<FaRegEdit />}
                       variant="ghost"
                       color="teal.500"
+                      onClick={() => { handleEditClick(record) }}
                     />
                   </Td>
                   <Td>
@@ -95,7 +143,7 @@ function App() {
                       icon={<MdDelete />}
                       variant="ghost"
                       color="teal.500"
-                      onClick={() => { deleteRecord(record.id) }}
+                      onClick={() => { handleDeleteClick(record.id) }}
                     />
                   </Td>
                 </Tr>
@@ -107,12 +155,12 @@ function App() {
 
       <Modal
         isOpen={isOpen}
-        onClose={onClose}
+        onClose={handleCancelClick}
       >
         <ModalOverlay />
         <ModalContent>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <ModalHeader fontSize={'30px'} data-testid="modalTitle">新規登録</ModalHeader>
+            <ModalHeader fontSize={"30px"} data-testid="modalTitle">{modalMode === "create" ? "新規登録" : "記録編集"}</ModalHeader>
             <ModalCloseButton />
             <ModalBody pb={6}>
               <FormControl>
@@ -128,7 +176,7 @@ function App() {
                 <FormLabel>学習時間</FormLabel>
                 <Input
                   type="number"
-                  placeholder='学習時間を記入してください'
+                  placeholder="学習時間を記入してください"
                   {...register(
                     "time", {
                     required: "学習時間の入力は必須です",
@@ -146,8 +194,8 @@ function App() {
             </ModalBody>
 
             <ModalFooter>
-              <Button type="submit" colorScheme='teal' mr={3}>
-                登録
+              <Button type="submit" colorScheme="teal" mr={3}>
+                {modalMode === "create" ? "登録" : "更新"}
               </Button>
             </ModalFooter>
           </form >
