@@ -10,11 +10,11 @@ const mockData = [
   new Record(4, "test4", 4, "2023-10-01T00:00:00Z"),
 ];
 
+
 const mockGetAllRecords = jest.fn().mockResolvedValue(mockData);
-
 const mockInsertRecord = jest.fn().mockResolvedValue(undefined);
-
 const mockDeleteRecord = jest.fn().mockResolvedValue(undefined);
+const mockUpdateRecord = jest.fn().mockResolvedValue(undefined);
 
 
 //モックの実装
@@ -22,11 +22,12 @@ jest.mock("../lib/studyRecord.ts", () => {
   return {
     GetAllRecords: () => mockGetAllRecords(),
     InsertRecord: (title: string, time: number) => mockInsertRecord(title, time),
-    DeleteRecord: (id: number) => mockDeleteRecord(id)
+    DeleteRecord: (id: number) => mockDeleteRecord(id),
+    UpdateRecord: (id: number, title: string, time: number) => mockUpdateRecord(id, title, time)
   }
 })
 
-
+//モック不必要
 describe("AppTest", () => {
   it("タイトルがあること", async () => {
     render(<App />);
@@ -41,7 +42,17 @@ describe("AppTest", () => {
   })
 });
 
+
+
+
+//モック必要
 describe("mockAppTest", () => {
+  beforeEach(() => {
+    // 各テスト前にモックをリセット
+    jest.clearAllMocks();
+    // モックデータを初期状態に戻す
+    mockGetAllRecords.mockResolvedValue([...mockData]);
+  });
   it("テーブルをみることができる(リスト)", async () => {
     render(<App />);
     const table = await screen.findByRole("table")
@@ -160,8 +171,10 @@ describe("mockAppTest", () => {
     expect(errorMessage).toHaveTextContent("学習時間は0以上である必要があります")
   })
 
+
+
   it("ユーザーは学習記録を削除することができること", async () => {
-    // データコピー
+    // モックデータコピー
     const currentData = [...mockData];
 
     //指定されたIDの学習記録を、配列から削除する
@@ -184,7 +197,67 @@ describe("mockAppTest", () => {
 
     // mockDeleteRecordが正しく呼び出されたことを確認
     expect(mockDeleteRecord).toHaveBeenCalledWith(2);
+  })
 
+  it("モーダルのタイトルが記録編集であること", async () => {
+    render(<App />);
+    //test3の編集ボタンをクリック
+    const editButtons = await screen.findAllByRole("button", { name: "編集" })
+    fireEvent.click(editButtons[2])
+    const modalTitle = await screen.findByTestId("modalTitle")
+    expect(modalTitle).toHaveTextContent("記録編集");
+
+  })
+
+  it("編集して登録すると更新されること", async () => {
+    // データコピー
+    const currentData = [...mockData];
+
+    //指定されたIDの学習記録を、配列に追加する
+    mockUpdateRecord.mockImplementation((id: number) => {
+      const index = currentData.findIndex((record => record.id === id))
+      if (index !== -1) {
+        currentData[index] = {
+          ...currentData[index],
+          title: "Test444",
+          time: 10
+        }
+      }
+      // 次に GetAllRecords を呼んだときは新しいデータを返すように
+      mockGetAllRecords.mockResolvedValue([...currentData]);
+      return Promise.resolve();
+    });
+
+
+    render(<App />)
+    //test4の編集ボタンをクリック
+    const editButtons = await screen.findAllByRole("button", { name: "編集" })
+    console.log("編集ボタンの数：", editButtons.length);
+    fireEvent.click(editButtons[3])
+
+    //すでに登録されている学習内容を表示
+    const titleInput = await screen.findByDisplayValue("test4")
+    expect(titleInput).toHaveValue("test4")
+    //すでに登録されている学習時間を表示
+    const timeInput = await screen.findByDisplayValue("4")
+    expect(timeInput).toHaveValue(4)
+
+    //学習内容、学習時間を編集
+    fireEvent.change(titleInput, { target: { value: "Test444" } })
+    fireEvent.change(timeInput, { target: { value: "10" } })
+
+    //更新ボタンをクリック
+    const updateButton = await screen.findByRole("button", { name: "更新" })
+    fireEvent.click(updateButton)
+
+    await waitFor(() => {
+      expect(screen.getByText("Test444")).toBeInTheDocument();
+      expect(screen.getByText("10")).toBeInTheDocument();
+      expect(screen.queryByText("test4")).toBeNull();
+      expect(screen.queryByText("4")).toBeNull();
+    })
+    // モック関数が正しく呼び出されたか確認
+    expect(mockUpdateRecord).toHaveBeenCalledWith(4, "Test444", 10);
 
   })
 })
