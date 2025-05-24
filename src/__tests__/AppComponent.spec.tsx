@@ -73,6 +73,7 @@ describe("mockAppTest", () => {
     expect(loading).toBeInTheDocument();
   })
 
+
   it("登録できること", async () => {
     // データコピー
     const currentData = [...mockData];
@@ -228,7 +229,6 @@ describe("mockAppTest", () => {
       return Promise.resolve();
     });
 
-
     render(<App />)
     //test4の編集ボタンをクリック
     const editButtons = await screen.findAllByRole("button", { name: "編集" })
@@ -258,6 +258,6 @@ describe("mockAppTest", () => {
     })
     // モック関数が正しく呼び出されたか確認
     expect(mockUpdateRecord).toHaveBeenCalledWith(4, "Test444", 10);
-
   })
+
 })

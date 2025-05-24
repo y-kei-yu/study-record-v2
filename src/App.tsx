@@ -13,6 +13,7 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [modalMode, setModalMode] = useState<"create" | "edit">("create")
   const [currentRecord, setCurrentRecord] = useState<Record | null>(null);
+  const [totalTime, setTotalTime] = useState<number>(0);
 
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { register, handleSubmit, formState: { errors }, reset } = useForm<Record>();
@@ -60,8 +61,12 @@ function App() {
   //全データ取得
   const getAllRecords = async () => {
     const allRecords = await GetAllRecords()
-    console.log(allRecords)
     setRecords(allRecords)
+    const initialTotalTime = allRecords.reduce(
+      (accumulator, currentValue) => accumulator + currentValue.time,
+      0
+    );
+    setTotalTime(initialTotalTime);
     setIsLoading(false)
   }
 
@@ -101,7 +106,7 @@ function App() {
 
   //ローディング
   if (isLoading) {
-    return <p>Loading...</p>
+    return <p style={{ width: "100%", textAlign: "center", fontSize: "35px", marginBottom: "100px", color: "black" }}>Loading...</p>
   }
   return (
     <>
@@ -116,10 +121,10 @@ function App() {
           <Table variant="striped" colorScheme="teal" color="black">
             <Thead>
               <Tr>
-                <Th>学習内容</Th>
-                <Th>学習時間(h)</Th>
-                <Th>編集</Th>
-                <Th>削除</Th>
+                <Th fontSize={"xl"}>学習内容</Th>
+                <Th fontSize={"xl"}>学習時間(h)</Th>
+                <Th fontSize={"xl"}>編集</Th>
+                <Th fontSize={"xl"}>削除</Th>
 
               </Tr>
             </Thead>
@@ -151,6 +156,7 @@ function App() {
             </Tbody>
           </Table>
         </TableContainer>
+        <div style={{ textAlign: "right", marginBottom: "20px", color: "black" }}>合計時間：{totalTime}/1000(h)</div>
       </Box>
 
       <Modal
