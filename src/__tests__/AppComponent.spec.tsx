@@ -214,7 +214,7 @@ describe("mockAppTest", () => {
     // データコピー
     const currentData = [...mockData];
 
-    //指定されたIDの学習記録を、配列に追加する
+    //学習記録を編集する
     mockUpdateRecord.mockImplementation((id: number) => {
       const index = currentData.findIndex((record => record.id === id))
       if (index !== -1) {

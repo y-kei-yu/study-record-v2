@@ -51,7 +51,9 @@ describe("totalTimeTest", () => {
 
         // 合計時間の初期値を確認
         const totalTimeTextBefore = await screen.findByText(/合計時間：\d+\/1000\(h\)/);
-        expect(totalTimeTextBefore).toHaveTextContent("合計時間：10/1000(h)"); // mockData = 1+2+3+4 = 10
+
+        // mockData = 1+2+3+4 = 10
+        expect(totalTimeTextBefore).toHaveTextContent("合計時間：10/1000(h)");
 
         // 新規登録ボタンをクリック
         fireEvent.click(await screen.findByRole("button", { name: "新規登録" }));
@@ -101,7 +103,7 @@ describe("totalTimeTest", () => {
 
         // 削除ボタンをクリック（test1の削除）
         const deleteButtons = await screen.findAllByLabelText("削除");
-        fireEvent.click(deleteButtons[0]); // 先頭行の削除ボタン（test1）
+        fireEvent.click(deleteButtons[0]);
 
         await waitFor(async () => {
             expect(mockDeleteRecord).toHaveBeenCalledWith(1);
@@ -118,7 +120,7 @@ describe("totalTimeTest", () => {
         // データコピー
         const currentData = [...mockData];
 
-        //指定されたIDの学習記録を、配列に追加する
+        //学習記録を編集する
         mockUpdateRecord.mockImplementation((id: number) => {
             const index = currentData.findIndex((record => record.id === id))
             if (index !== -1) {
@@ -147,7 +149,8 @@ describe("totalTimeTest", () => {
         fireEvent.change(titleInput, { target: { value: "React(編集)" } });
 
         const timeInput = await screen.findByPlaceholderText("学習時間を記入してください");
-        fireEvent.change(timeInput, { target: { value: "5" } }); // 1 → 5
+        // 1 → 5に変更
+        fireEvent.change(timeInput, { target: { value: "5" } });
 
         // 更新ボタンをクリック
         const updateButton = await screen.findByRole("button", { name: "更新" });
